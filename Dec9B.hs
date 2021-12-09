@@ -1,5 +1,4 @@
 import Data.Function (on)
-import Data.Functor (void)
 import Data.List (sort, sortBy, minimumBy, group)
 import Text.Parsec hiding (State)
 
@@ -20,10 +19,9 @@ solve heights = ans
     inside (x, y) = x >= 0 && x <= (length heights - 1) && y >= 0 && y <= (length (head heights) - 1)
     neightbours (x, y) = filter inside $ map (\(dx, dy) -> (x + dx, y + dy)) neightbourList
     lower p1 p2 = getHeight p1 < getHeight p2
-    go p = let lowers = filter (`lower` p) $ neightbours p in
-      case lowers of
-        [] -> p
-        ps -> go $ minimumBy (compare `on` getHeight) ps
+    go p = case filter (`lower` p) $ neightbours p of
+      [] -> p
+      ps -> go $ minimumBy (compare `on` getHeight) ps
     ans = product $ take 3 $ sortBy (flip compare) $ map length $ group $ sort $ map go $ filter ((/= 9) . getHeight) points
 
 main :: IO ()
