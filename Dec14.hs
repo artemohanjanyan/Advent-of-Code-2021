@@ -50,34 +50,31 @@ solveA (Input str rules) = maximum frequencies - minimum frequencies
     count c = length $ filter (== c) resultStr
     frequencies = filter (/= 0) $ map count ['A'..'Z']
 
-type LHSC = (Int, Int)
-type PairFreq = Map.Map (LHS, LHSC) Int
+type PairFreq = Map.Map LHS Int
 
 applyRulesMap :: InsertionRules -> PairFreq -> PairFreq
 applyRulesMap rules pairFreq = foldr applyToPair Map.empty $ Map.toList pairFreq
   where
-    applyToPair :: ((LHS, LHSC), Int) -> PairFreq -> PairFreq
-    applyToPair (lhs'@(lhs@(lhsA, lhsB), (ca, cb)), count) pairFreq = case Map.lookup lhs rules of
+    applyToPair :: (LHS, Int) -> PairFreq -> PairFreq
+    applyToPair (lhs@(lhsA, lhsB), count) pairFreq = case Map.lookup lhs rules of
       Just rhs ->
-        Map.insertWith (+) ((lhsA, rhs), (ca, 1)) count $
-        Map.insertWith (+) ((rhs, lhsB), (1, cb)) count pairFreq
-      Nothing -> Map.insertWith (+) lhs' count pairFreq
+        Map.insertWith (+) (lhsA, rhs) count $
+        Map.insertWith (+) (rhs, lhsB) count pairFreq
+      Nothing -> Map.insertWith (+) lhs count pairFreq
 
 solveB :: Input -> Int
 solveB (Input str rules) = maximum frequencies - minimum frequencies
   where
-    pairs = zip (zip str (tail str)) (repeat (1, 1))
-    changeHead f (x:xs) = f x : xs
-    pairs' =
-      reverse $ changeHead (\(p, (a, b)) -> (p, (a, b + 1))) $
-      reverse $ changeHead (\(p, (a, b)) -> (p, (a + 1, b))) pairs
-    startPairFreq = Map.fromListWith (+) $ zip pairs' (repeat 1)
+    startPairFreq = Map.fromListWith (+) $ zip (zip str (tail str)) (repeat 1)
     resultPairFreq = foldr ($) startPairFreq $ replicate 40 (applyRulesMap rules)
 
-    f (((a, b), (ca, cb)), count) m =
-      Map.insertWith (+) a (count * ca) $
-      Map.insertWith (+) b (count * cb) m
-    letterMap = foldr f Map.empty $ Map.toList resultPairFreq
+    f ((a, b), count) m =
+      Map.insertWith (+) a count $
+      Map.insertWith (+) b count m
+    letterMap =
+      Map.insertWith (+) (head str) 1 $
+      Map.insertWith (+) (last str) 1 $
+      foldr f Map.empty $ Map.toList resultPairFreq
 
     count c = Map.findWithDefault 0 c letterMap `div` 2
     frequencies = filter (/= 0) $ map count ['A'..'Z']
