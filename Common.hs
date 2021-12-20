@@ -16,7 +16,10 @@ import Text.Parsec hiding (State, (<|>))
 type Parser = Parsec String ()
 
 intParser :: Parser Int
-intParser = read <$> many1 digit
+intParser = do
+  sign <- option "" (string "-")
+  digits <- many1 digit
+  pure $ read $ sign ++ digits
 
 digitParser :: Parser Int
 digitParser = read . (:[]) <$> digit
@@ -27,11 +30,11 @@ class Printable a where
 instance {-# OVERLAPPING #-} Printable String where
   print' = putStr
 
+instance {-# OVERLAPPING #-} Printable (IO ()) where
+  print' io = io
+
 instance Show a => Printable a where
   print' = print
-
-instance Printable (IO ()) where
-  print' = id
 
 mainImpl
   :: (Printable b, Printable c)
