@@ -3,13 +3,19 @@
 
 module Common
   ( module Text.Parsec
+  , module Control.Applicative
+  , module Data.Functor
+
   , Parser
   , intParser
   , digitParser
   , Printable (..)
   , mainImpl
+  , unique
   ) where
 
+import Control.Applicative ((<|>))
+import Data.Functor (($>), void)
 import System.Environment (getArgs)
 import Text.Parsec hiding (State, (<|>))
 
@@ -23,6 +29,13 @@ intParser = do
 
 digitParser :: Parser Int
 digitParser = read . (:[]) <$> digit
+
+unique :: Ord a => [a] -> [a]
+unique [] = []
+unique [x] = [x]
+unique (x:y:xs)
+  | x == y = unique (x:xs)
+  | otherwise = x : unique (y:xs)
 
 class Printable a where
   print' :: a -> IO ()

@@ -63,13 +63,6 @@ countEqual (x:xs) (y:ys)
   | x == y = 1 + countEqual xs ys
 countEqual _ _ = 0
 
-unique :: Ord a => [a] -> [a]
-unique [] = []
-unique [x] = [x]
-unique (x:y:xs)
-  | x == y = unique (x:xs)
-  | otherwise = x : unique (y:xs)
-
 intersectScanners :: Scanner -> Scanner -> Maybe (Scanner, Point)
 intersectScanners xs ys = listToMaybe $ do
   yTransformation <- transformations
