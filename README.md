@@ -4,10 +4,11 @@ My solutions, in Haskell.
 
 ### Running
 
-```pbpaste | runghc DecNX.hs```
+```pbpaste | runghc DecNN.hs A```
 
 or 
 
-```pbpaste | runghc --ghc-arg="-package parsec" DecNX.hs```
+```pbpaste | runghc DecNN.hs B```
 
-for programs which require parsec.
+Try adding `--ghc-arg="-package parsec"` if it complains about parsec.
+Apart from boot libraries I use vector and bitvec.
