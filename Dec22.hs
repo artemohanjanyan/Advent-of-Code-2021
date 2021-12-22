@@ -4,14 +4,14 @@ import Data.Maybe (fromJust)
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
+import Data.Bit
+
+import Control.Monad (forM_)
+import Control.Monad.ST (runST)
+import qualified Data.Vector.Unboxed.Mutable as MU
+
 lookup' :: Ord k => k -> Map.Map k a -> a
 lookup' key m = fromJust $ Map.lookup key m
-
-{-
-on x=-9..35,y=-49..3,z=-14..39
-off x=-42..-30,y=-3..13,z=-31..-21
-on x=-10..35,y=-35..17,z=-16..31
--}
 
 data Point = Point !Int !Int !Int
   deriving (Eq, Ord, Show)
@@ -71,7 +71,14 @@ compress = go 0 Map.empty Map.empty . unique . sort
         coordSize' = Map.insert next 1 coordSize
 
 solveB :: [Cuboid] -> Int
-solveB cuboids = sum $ map cubeSize $ Set.toList $ foldl' runStep Set.empty $ map mapCuboid cuboids
+solveB cuboids = runST $ do
+  array <- MU.replicate arraySize (Bit False)
+  forM_ cuboids $ \realCuboid -> do
+    let logicalCuboid@(Cuboid fl _ _) = mapCuboid realCuboid
+    forM_ (cuboidPoints logicalCuboid) $ \(Point x y z) ->
+      MU.write array (getPhysicalAddress x y z) (Bit fl)
+  MU.ifoldl' (\acc i (Bit b) -> if b then acc + cubeSize (getLogicalAddress i) else acc) 0 array
+  -- sum $ map cubeSize $ Set.toList $ foldl' runStep Set.empty $ map mapCuboid cuboids
   where
     extractCoords (Cuboid _ (Point x1 y1 z1) (Point x2 y2 z2)) = [(x1, y1, z1), (x2, y2, z2)]
     (xs, ys, zs) = unzip3 $ concat $ map extractCoords cuboids
@@ -80,6 +87,15 @@ solveB cuboids = sum $ map cubeSize $ Set.toList $ foldl' runStep Set.empty $ ma
       (Point (lookup' x1 xMap) (lookup' y1 yMap) (lookup' z1 zMap))
       (Point (lookup' x2 xMap) (lookup' y2 yMap) (lookup' z2 zMap))
     cubeSize (Point x y z) = lookup' x xSize * lookup' y ySize * lookup' z zSize
+
+    coordSize = (+1) . maximum . map snd . Map.toList 
+    xN = coordSize xMap
+    yN = coordSize yMap
+    zN = coordSize zMap
+    arraySize = xN * yN * zN
+
+    getPhysicalAddress x y z = x * yN * zN + y * zN + z
+    getLogicalAddress n = Point (n `div` (yN * zN)) (n `mod` (yN * zN) `div` zN) (n `mod` zN)
 
 main :: IO ()
 main = mainImpl parser solveA solveB
