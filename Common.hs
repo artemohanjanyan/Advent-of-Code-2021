@@ -2,9 +2,10 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Common
-  ( module Text.Parsec
-  , module Control.Applicative
+  ( module Control.Applicative
+  , module Control.Monad
   , module Data.Functor
+  , module Text.Parsec
 
   , Parser
   , intParser
@@ -15,6 +16,7 @@ module Common
   ) where
 
 import Control.Applicative ((<|>))
+import Control.Monad
 import Data.Functor (($>), void)
 import System.Environment (getArgs)
 import Text.Parsec hiding (State, (<|>))
